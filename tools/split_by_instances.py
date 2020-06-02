@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import os
 import pickle
 import sys
 
@@ -69,4 +70,5 @@ if __name__ == "__main__":
     logger.set_file_handle("splitting-by-instances.log")
     with open(sys.argv[1]) as f:
         config = json.load(f)
+    config["base_dir"] = os.path.expanduser(config["base_dir"])
     create_instance_based_splitting(config, regions, logger)

@@ -1,6 +1,6 @@
 {
-    "base_dir": "./chulk-logs",
-    "training_files": "/Users/igpp-jalafate/bathymetry-traintest-split/train.txt",
+    "base_dir": "~/workspace",
+    "training_files": "/path/to/the/text/file/listing/the/training/files",
     "validation_files": "/Users/igpp-jalafate/bathymetry-traintest-split/valid.txt",
     "testing_files": "/Users/igpp-jalafate/bathymetry-traintest-split/test.txt",
     "rounds": 1000,
