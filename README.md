@@ -13,7 +13,7 @@ contains scores in addition to some meta information about examples, e.g. cruise
 * `train.py`: template code to be called by "__main__.py" proper functions for training.
 * `config.json`: config such as the input data path, and the directory to write the models
 
-## Typical execution
+## Typical usage
 
 1. Create a train/test split
 
