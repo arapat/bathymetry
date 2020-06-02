@@ -27,5 +27,11 @@ python bathymetry <data_type> <task_type> <config_path>
    * "test-all": test the model trained on all data on the dataset from research institutions (test n times)
    * "train-instances": training a model using a data that is splitted on the instance level (ignore for now)
    * "test-instances": testing a model using a test set that was splitted on the instance level (ignore for now)
-   
-Bootstrap is not yet supported by this script.
+
+
+## Missing parts
+
+1. Bootstrap is not yet supported by this script.
+2. The code does not do train/test split. The data files should be generated beforehand. All data files for training should be written to a train-files.txt. Similarly, all data files for testing should be written to a test-files.txt. Finally, the path of these two files should be included in config.json.
+
+
