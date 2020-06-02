@@ -15,6 +15,18 @@ contains scores in addition to some meta information about examples, e.g. cruise
 
 ## Typical execution
 
+1. Create a train/test split
+
+All data files are uploaded to S3. Before training a model, you should create a random train-test split.
+The training is implementing such that it reads the training data from a list of files (same for the testing data).
+In the `config.json` configuration, you should provide a path to a text file, which contains a list of training data files.
+Please refer to the [train-test-split](./train-test-split) folder for sample scripts that can be used to create train-test split and write the filenames in a text file.
+
+2. Run training with bootstrap
+
+The bathymetry module is implemented to train the models in different conditions (see `task_type` below). Note that 
+ bootstrap is NOT implemented in this module.
+
 ```
 python bathymetry <data_type> <task_type> <config_path>
 ```
@@ -27,6 +39,10 @@ python bathymetry <data_type> <task_type> <config_path>
    * "test-all": test the model trained on all data on the dataset from research institutions (test n times)
    * "train-instances": training a model using a data that is splitted on the instance level (ignore for now)
    * "test-instances": testing a model using a test set that was splitted on the instance level (ignore for now)
+   
+3. Run testing
+
+Testing is implemented in this module (see above).
 
 
 ## Missing parts
