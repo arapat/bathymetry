@@ -41,5 +41,8 @@ and `testing-files.txt` that lists all files that will be for testing.
 ```
 $ python -m bathymetry tsv train <config_path>
 ```
-
+* Test the models
+```
+$ python -m bathymetry tsv cross-test <config_path>
+```
 
