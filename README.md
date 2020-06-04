@@ -42,7 +42,7 @@ JAMSTEC-part095.tsv
 JAMSTEC-part202.tsv
 ...
 ```
-Then provide these three files to the training program in `config.json`.
+Then specify these three files to the training program in `config.json`.
 
 
 2. Run training with bootstrap
