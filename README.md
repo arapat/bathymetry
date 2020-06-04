@@ -17,10 +17,33 @@ contains scores in addition to some meta information about examples, e.g. cruise
 
 1. Create a train/test split
 
+*IF CRUISE SEGMENTS ARE NOT CREATED FOR YOU*
 All data files are uploaded to S3. Before training a model, you should create a random train-test split.
 The training is implementing such that it reads the training data from a list of files (same for the testing data).
 In the `config.json` configuration, you should provide a path to a text file, which contains a list of training data files.
 Please refer to the [train-test-split](./train-test-split) folder for sample scripts that can be used to create train-test split and write the filenames in a text file.
+
+*IF CRUISE SEGMENTS ARE CREATED FOR YOU*
+If you have been provided with the cruise segments, for example,
+```
+JAMSTEC-part000.tsv
+JAMSTEC-part001.tsv
+JAMSTEC-part002.tsv
+...
+```
+You need to create three files - `training-filelist.txt`,
+`validation-filelist.txt`, and
+`test-filelist.txt`, each contains a list of filenames.
+For example, `training-filelist.txt` should contain all cruise segments which you plan to use for training the model:
+```
+$ cat training-filelist.txt
+JAMSTEC-part010.tsv
+JAMSTEC-part095.tsv
+JAMSTEC-part202.tsv
+...
+```
+Then provide these three files to the training program in `config.json`.
+
 
 2. Run training with bootstrap
 
