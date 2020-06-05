@@ -46,3 +46,20 @@ $ python -m bathymetry tsv train <config_path>
 $ python -m bathymetry tsv cross-test <config_path>
 ```
 
+## Where to find the predicted scores
+
+A directory named `runtime_scores` should be generated under the `base_dir` specified in the config `config.json`.
+The files under the directory are named in the following format:
+`model_{RegionUsedForTraining}_test_{RegionUsedForTesting}_scores.pkl`.
+The pickle files can be read as follows:
+```python
+with open(pickle_filename, "rb") as f:
+  (features, label, scores, weights) = pickle.load(f)
+```
+where
+* `features` is the a vector of Nx4 array, each row with 4 values, longitude, latitude, depth1, depth2 (you should not worry about the meanings of these features);
+* "label" is an array of size N, which are the true labels of all examples;
+* "scores" is an array of size N, which are the model predictions on all examples;
+* "weights" is not being used.
+
+(features[:, :4], label, scores, weights)
