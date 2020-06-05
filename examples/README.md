@@ -1,7 +1,7 @@
 # Example
 
 In this repository, we created a script and the corresponding config file for you to train 
-a model using a training set from JAMSTEC, and test the model on the test set from JAMSTEC.
+a model using a training set from SIO, and test the model on the test set from SIO.
 
 ```
 # Generate the data file lists for training and testing
