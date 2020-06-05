@@ -17,13 +17,15 @@ contains scores in addition to some meta information about examples, e.g. cruise
 
 1. Create a train/test split
 
-*IF CRUISE SEGMENTS ARE NOT CREATED FOR YOU*
+**IF CRUISE SEGMENTS ARE NOT CREATED FOR YOU**
+
 All data files are uploaded to S3. Before training a model, you should create a random train-test split.
 The training is implementing such that it reads the training data from a list of files (same for the testing data).
 In the `config.json` configuration, you should provide a path to a text file, which contains a list of training data files.
 Please refer to the [train-test-split](./train-test-split) folder for sample scripts that can be used to create train-test split and write the filenames in a text file.
 
-*IF CRUISE SEGMENTS ARE CREATED FOR YOU*
+**IF CRUISE SEGMENTS HAVE BEEN CREATED FOR YOU**
+
 If you have been provided with the cruise segments, for example,
 ```
 JAMSTEC-part000.tsv
@@ -78,41 +80,41 @@ Testing is implemented in this module (see above).
 Each line in the `.tsv` data files should contain 35 columns. The meaning of the columns are as follows.
 
 ```
-index name                                      Example
-00    lon                                	143.92639
-01    lat                                	-43.99727
-02    depth                              	-4637
-03    sigh                               	0
-04    sigd                               	-1
-05    SID                                	10088
-06    pred                               	-4633
-07    ID                                 	1
-08    (pred-depth)/depth                 	0.000862627
-09    d10                                	0.984607124262
-10    d20                                	0.972010395656
-11    d60                                	0.953167490781
-12    age                                	39.3518032149
-13    VGG                                	20.9209685261
-14    rate                               	1773.1538453
-15    sed                                	1002.69584759
-16    roughness                          	23.1643450107
-17    G:T                                	0.58473963179
-18    NDP2.5m                            	352.591278239
-19    NDP5m                              	1227.86403676
-20    NDP10m                             	4867.36187959
-21    NDP30m                             	28191.8030442
-22    STD2.5m                            	22.2740933357
-23    STD5m                              	42.2348361999
-24    STD10m                             	86.5628813895
-25    STD30m                             	188.407867174
-26    MED2.5m                            	-17.3113
-27    MED5m                              	-30.9435
-28    MED10m                             	-0.9137
-29    MED30m                             	1.9221
+index name                                      Example              Description
+00    lon                                	143.92639            longitude of the location
+01    lat                                	-43.99727            latitude of the location
+02    depth                              	-4637                the depth measured by the crew
+03    sigh                               	0                    not sure what it means
+04    sigd                               	-1                   set to 9999 if the measurement is marked as wrong, and otherwises if it is correct
+05    SID                                	10088                Cruise ID, should not be used as features
+06    pred                               	-4633                the predicted depth with the gravity model
+07    ID                                 	1                    not sure what it means
+08    (pred-depth)/depth                 	0.000862627          the relative difference between the measure and the prediction by the gravity model
+09    d10                                	0.984607124262       average depth of the sea floor in the 10km grid
+10    d20                                	0.972010395656       average depth of the sea floor in the 20km grid
+11    d60                                	0.953167490781       average depth of the sea floor in the 60km grid
+12    age                                	39.3518032149        Age of the oceanic plate
+13    VGG                                	20.9209685261        not sure what it means
+14    rate                               	1773.1538453         Plate half-spreading rate
+15    sed                                	1002.69584759        Sediment thickness
+16    roughness                          	23.1643450107        Seafloor roughness
+17    G:T                                	0.58473963179        
+18    NDP2.5m                            	352.591278239        depth minus MEDIAN_depth_in_2.5km_blocks
+19    NDP5m                              	1227.86403676        depth minus MEDIAN_depth_in_5km_blocks        
+20    NDP10m                             	4867.36187959        depth minus MEDIAN_depth_in_10km_blocks        
+21    NDP30m                             	28191.8030442        depth minus MEDIAN_depth_in_30km_blocks        
+22    STD2.5m                            	22.2740933357        STD_of_depth_in_2.5km_blocks
+23    STD5m                              	42.2348361999        STD_of_depth_in_5km_blocks        
+24    STD10m                             	86.5628813895        STD_of_depth_in_10km_blocks        
+25    STD30m                             	188.407867174        STD_of_depth_in_30km_blocks        
+26    MED2.5m                            	-17.3113             MEDIAN_depth_in_2.5km_blocks
+27    MED5m                              	-30.9435             MEDIAN_depth_in_5km_blocks
+28    MED10m                             	-0.9137              MEDIAN_depth_in_10km_blocks
+29    MED30m                             	1.9221               MEDIAN_depth_in_30km_blocks
 30    D-MED2.5m/STD2.5m                  	-0.777193
 31    D-MED5m/STD5m                      	-0.732653
 32    D-MED10m/STD10m                    	-0.0105553
 33    D-MED30m/STD30m                    	0.0102018
-34    year                               	2000
-35    kind                               	G
+34    year                               	2000                The year of the measurement
+35    kind                               	G                   Device type used for measurements
 ```
