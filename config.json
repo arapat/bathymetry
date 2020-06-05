@@ -11,6 +11,7 @@
     "tree_learner": "serial",
     "task": "train",
     "num_thread": 12,
+    "min_data_in_leaf": 1,
     "two_round": true,
     "is_unbalance": true,
     "num_leaves": 31,
