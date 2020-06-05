@@ -20,8 +20,12 @@ def run_training_per_region(
         t_features, label=t_labels, weight=t_weights, params={'max_bin': config["max_bin"]})
     (v_features, v_labels, v_weights) = get_region_data(
         config["base_dir"], all_valid_files, regions, is_read_text, VALID_PREFIX, logger)
-    valid_dataset = lgb.Dataset(
-        v_features, label=v_labels, weight=v_weights, params={'max_bin': config["max_bin"]})
+    if len(v_features) == 0:
+        logger.log("No validation data provided.")
+        valid_dataset = None
+    else:
+        valid_dataset = lgb.Dataset(
+            v_features, label=v_labels, weight=v_weights, params={'max_bin': config["max_bin"]})
 
     train(config, train_dataset, valid_dataset, region_str, logger)
 
