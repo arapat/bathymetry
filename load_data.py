@@ -105,7 +105,7 @@ def get_datasets(base_dir, filepaths, is_read_text, prefix, logger):
                 features, labels, weights, incorrect_cols = read_data_from_text(filename)
             else:
                 features, labels, weights, incorrect_cols = read_data_from_binary(filename)
-            logger.log("loaded, {}, incorrect cols, {}, corrupt, {}, size, {}, dim, {}".format(
+            logger.log("loaded, {}, format error, {}, correct, {}, size, {}, dim, {}".format(
                 filename, incorrect_cols, np.sum(labels), len(features), features[0].shape[0]))
         except Exception as err:
             # Print error message only if we are supposed to read this file
@@ -183,6 +183,7 @@ def persist_predictions(base_dir, model_region, test_region, features, label, sc
 
 
 def persist_model(base_dir, region, gbm):
+    print("booster size", gbm.num_trees())
     pkl_model_path = get_model_path(base_dir, region)
     txt_model_path = pkl_model_path.rsplit('.', 1)[0] + ".txt"
     with open(pkl_model_path, 'wb') as fout:
