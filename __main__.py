@@ -40,6 +40,7 @@ def run_test(model_name, test_regions, task, data=None):
     logger = Logger()
     logfile = os.path.join(config["base_dir"], "testing_log_{}.log".format(model_name))
     logger.set_file_handle(logfile)
+    logger.log("eval, model_region, data_region, model_size, loss, auprc, auroc, accuracy")
     task = task.split('-')[1]
     run_testing(config, [model_name], test_regions, is_read_text, task, logger, all_data=data)
 
