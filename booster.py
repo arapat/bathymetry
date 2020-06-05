@@ -24,8 +24,8 @@ def train(config, train_dataset, valid_dataset, region, logger):
             # early_stopping_rounds=config["early_stopping_rounds"],
             # fobj=expobj, feval=exp_eval,
         )
-    except:
-        logger.log("Failed to train, {}".format(region))
+    except Exception as e:
+        logger.log("Failed to train, {}, {}".format(region, e))
         return
     logger.log("training completed.")
     persist_model(config["base_dir"], region, gbm)

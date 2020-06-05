@@ -26,17 +26,29 @@ def run_testing(config, models, regions, is_read_text, test_mode, logger, all_da
     if test_mode == "self":
         assert(len(models) == len(regions))
         for model_name, region in zip(models, regions):
+            model_path = get_model_path(base_dir, model_name)
+            if not os.path.exists(model_path):
+                logger.log("Model {} does not exist.".format(model_name))
+                continue
             run_testing_per_region(
                 model_name, [region], region, base_dir, all_testing_files, is_read_text, logger,
                 all_data)
     elif test_mode == "cross":
         for model_name in models:
+            model_path = get_model_path(base_dir, model_name)
+            if not os.path.exists(model_path):
+                logger.log("Model {} does not exist.".format(model_name))
+                continue
             for region in regions:
                 run_testing_per_region(
                     model_name, [region], region, base_dir, all_testing_files, is_read_text, logger,
                     all_data)
     else:  # test_mode == "all"
         for model_name in models:
+            model_path = get_model_path(base_dir, model_name)
+            if not os.path.exists(model_path):
+                logger.log("Model {} does not exist.".format(model_name))
+                continue
             run_testing_per_region(
                 model_name, regions, "all", base_dir, all_testing_files, is_read_text, logger,
                 all_data)
@@ -53,7 +65,10 @@ def run_testing_per_region(
     else:
         (features, labels, weights) = data
     logger.log("finished loading testing data")
-    # Start training
+    if len(features) == 0:
+        logger.log("No data is loaded.")
+        return
+    # Start testing
     model_path = get_model_path(base_dir, model_region)
     scores = get_scores(model_region, test_region_str, features, labels, model_path, logger)
     persist_predictions(base_dir, model_region, test_region_str, features, labels, scores, weights)
