@@ -118,3 +118,28 @@ index name                                      Example              Description
 34    year                               	2000                The year of the measurement
 35    kind                               	G                   Device type used for measurements
 ```
+
+## Program output
+
+The training scripts will create 3 directories under the specified `base_dir` (in `config.json`).
+The three directories are:
+
+* `runtime_data`:  write a pickle file for each TSV data files, so that later we can load pickle files instead of parsing a text file, which is much faster
+* `runtime_model`: output the trained model in two formats, pickle and text
+* `runtime_scores`: see below
+
+The scripts output the model prediction scores on the test examples in the `runtime_scores` directory.
+The output files are named in the following format: model_{RegionUsedForTraining}_test_{RegionUsedForTesting}_scores.pkl.
+The pickle files can be read as follows:
+
+```python
+with open(pickle_filename, "rb") as f:
+  (features, label, scores, weights) = pickle.load(f)
+```
+
+where
+
+* "features" is the a vector of Nx4 array, each row with 4 values, longitude, latitude, depth1, depth2 (you should not worry about the meanings of these features);
+* "label" is an array of size N, which are the true labels of all examples;
+* "scores" is an array of size N, which are the model predictions on all examples;
+* "weights" is not being used.
