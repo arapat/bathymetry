@@ -77,6 +77,12 @@ Testing is implemented in this module (see above).
 
 ## Data columns
 
+### Label
+
+The label is derived from the column 04 (see below), `sigd`: the example is labeled 0 if sigd == “9999”, and labeled 1 otherwise.
+
+### Description of all columns
+
 Each line in the `.tsv` data files should contain 35 columns. The meaning of the columns are as follows.
 
 ```
