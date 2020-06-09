@@ -91,7 +91,7 @@ index name                                      Example              Description
 01    lat                                	-43.99727            latitude of the location
 02    depth                              	-4637                the depth measured by the crew
 03    sigh                               	0                    not sure what it means
-04    sigd                               	-1                   set to 9999 if the measurement is marked as wrong, and otherwises if it is correct
+04    sigd                               	-1                   state according to human editor: 9999 = bad (do not incorporate into atlas), all other values = Good (incorporate into atlas), 
 05    SID                                	10088                Cruise ID, should not be used as features
 06    pred                               	-4633                the predicted depth with the gravity model
 07    ID                                 	1                    not sure what it means
