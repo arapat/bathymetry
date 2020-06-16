@@ -12,6 +12,8 @@ INVENTORY_PATH = os.path.join(DATA_DIR, "inventory.tsv")
 MODEL_DIR = "runtime_models"
 SCORES_DIR = "runtime_scores"
 
+            
+######### General #########
 
 def init_setup(base_dir):
     for dirname in [MODEL_DIR, SCORES_DIR]:
@@ -20,43 +22,93 @@ def init_setup(base_dir):
             os.mkdir(dir_path)
 
 
-def read_data(filepaths):
-    _features, _labels = [], []
-    for filename in filepaths:
-        with open(filename, 'rb') as f:
-            features, labels = pickle.load(f)
-        _features += features.tolist()
-        _labels += labels.tolist()
-    return np.array(_features), np.array(_labels).astype(np.int)
+def train_test_split(array, rtrain, rvalidate, rtest):
+    assert(rtrain + rvalidate + rtest == 1.0)
+    random.shuffle(array)
+    r0, r1 = int(len(array) * rtrain), int(len(array) * rvalidate)
+    r1 = r0 + r1
+    trains, validates, tests = array[:r0], array[r0:r1], array[r1:]
+    return (trains, validates, tests)
 
+            
+######### Process filenames #########
 
 def get_region_parts(region):
     inv = pd.read_csv(INVENTORY_PATH, sep="\t", names=["region", "cruise", "total", "bad", "parts"])
     region_inv = inv[inv["region"] == region]
     partfiles = []
     for basename, parts in region_inv[["cruise", "parts"]].values:
-        for k in range(parts):
-            partfiles.append(
-                os.path.join(DATA_DIR, region, "{}_part{:06d}.pkl".format(basename, k)))
+        partfiles.append([
+            os.path.join(DATA_DIR, region, "{}_part{:06d}.pkl".format(basename, k)) for k in range(parts)
+        ])
     return partfiles
 
 
-def get_all_parts(all_regions):
+def get_parts(all_regions):
     partfiles = []
     for region in all_regions:
-        partfiles += get_region_parts(region)
+        partfiles.append(get_region_parts(region))
     return partfiles
 
 
-def train_test_split(files, rtrain, rvalidate, rtest):
-    assert(rtrain + rvalidate + rtest == 1.0)
-    filenames = files[::]
-    random.shuffle(filenames)
-    r0, r1 = int(len(filenames) * rtrain), int(len(filenames) * rvalidate)
-    r1 = r0 + r1
-    trains, validates, tests = filenames[:r0], filenames[r0:r1], filenames[r1:]
-    return (trains, validates, tests)
+def remove_region_info_in_parts(all_parts):
+    # return [["part1", "part2", ...], ["part1", "part2", ...]]
+    def merge_array(array):
+        ret = []
+        for t in array:
+            ret += t
+        return ret
+    return merge_array(all_parts)
 
+
+######### Process loaded data #########
+
+
+def read_data(filepaths):
+    assert(type(filepaths) is list and type(filepaths[0]) is list and type(filepaths[0][0]) is str)
+    _ret = []
+    for cruise in filepaths:
+        ret = []
+        for parts in cruise:
+            with open(parts, "rb") as f:
+                features, labels = pickle.load(f)
+                ret.append((features, labels.astype(np.int)))
+        _ret.append(ret)
+    return _ret
+
+
+def transform_data_get_parts(data):
+    # return list of numpy
+    ret = []
+    for t in data:
+        ret += t
+    return ret
+
+
+def transform_data_get_cruises(data):
+    # return list of numpy
+    features = []
+    labels = []
+    for cruise in data:
+        _features = []
+        _labels = []
+        for a, b in cruise:
+            _features.append(a)
+            _labels.append(b)
+        ret.append(
+            (np.concatenate(_features, axis=0), np.concatenate(_labels, axis=0))
+        )
+    return ret
+
+
+def split_features_labels(dataset):
+    return (
+        np.concatenate([a for a, b in dataset]),
+        np.concatenate([b for a, b in dataset]),
+    )
+
+
+############################################
 
 
 def get_model_path(base_dir, region):
