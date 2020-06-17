@@ -35,6 +35,7 @@ def train_test_split(array, rtrain, rvalidate, rtest):
 
 def get_region_parts(region):
     inv = pd.read_csv(INVENTORY_PATH, sep="\t", names=["region", "cruise", "total", "bad", "parts"])
+    inv = inv[inv["parts"] > 0]
     region_inv = inv[inv["region"] == region]
     partfiles = []
     for basename, parts in region_inv[["cruise", "parts"]].values:
