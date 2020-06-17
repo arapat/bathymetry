@@ -1,8 +1,5 @@
 {
-    "base_dir": "~/workspace",
-    "training_files": "/path/to/the/text/file/listing/the/training/files",
-    "validation_files": "/path/to/the/text/file/listing/the/validation/files",
-    "testing_files": "/path/to/the/text/file/listing/the/test/files",
+    "work_dir": "/cryosat3/jalafate/worklog/cruise_all_regions",
     "rounds": 1000,
     "early_stopping_rounds": 200,
     "objective": "binary",

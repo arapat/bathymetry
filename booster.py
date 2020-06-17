@@ -7,40 +7,38 @@ from sklearn.metrics import roc_curve
 from .common import print_ts
 from .load_data import persist_model
 
-def train(config, train_dataset, valid_dataset, region, logger):
-    logger.log("start training...")
-    # Strange bug exists that prevents saving all iterations if `early_stopping_rounds` is enabled
-    config["early_stopping_rounds"] = None
+
+def train(config, train_features, train_labels, valid_features, valid_labels, logger):
+    gbm_config = get_config(config)
+    logger.log("booster, constrct dataset")
+    train_dataset = lgb.Dataset(train_features, label=train_labels,
+                                params={'max_bin': config["max_bin"]})
     valid_sets = [train_dataset]
-    if valid_dataset is not None:
+    if valid_features is not None:
+        valid_dataset = lgb.Dataset(valid_features, label=valid_labels,
+                                    params={'max_bin': config["max_bin"]})
         valid_sets.append(valid_dataset)
+
+    logger.log("booster, start training")
     try:
         gbm = lgb.train(
-            config,
+            gbm_config,
             train_dataset,
-            num_boost_round=config["rounds"],
+            num_boost_round=gbm_config["rounds"],
             valid_sets=valid_sets,
             callbacks=[print_ts(logger)],
-            # early_stopping_rounds=config["early_stopping_rounds"],
-            # fobj=expobj, feval=exp_eval,
         )
     except Exception as e:
-        logger.log("Failed to train, {}, {}".format(region, e))
-        return
-    logger.log("training completed.")
-    persist_model(config["base_dir"], region, gbm)
-    logger.log("Model for {} is persisted".format(region))
+        logger.log("training failed, {}".format(e))
+        return None
+    return gbm
 
 
-def get_scores(region, test_region, features, labels, pkl_model_path, logger):
-    # load model with pickle to predict
-    with open(pkl_model_path, 'rb') as fin:
-        model = pickle.load(fin)
-
-    # Prediction
+def test(model, region, test_region, features, labels, logger):
+    logger.log("booster, start predicting")
     preds = model.predict(features)
     scores = np.clip(preds, 1e-15, 1.0 - 1e-15)
-    logger.log('finished prediction')
+    logger.log("booster, finish predicting")
 
     # compute auprc
     loss = np.mean(labels * -np.log(scores) + (1 - labels) * -np.log(1.0 - scores))
@@ -54,3 +52,21 @@ def get_scores(region, test_region, features, labels, pkl_model_path, logger):
     logger.log("eval, {}, {}, {}, {}, {}, {}, {}".format(
         region, test_region, model.num_trees(), loss, auprc, auroc, acc))
     return scores
+
+
+def get_config(config):
+    return {
+        "rounds": config["rounds"],
+        "early_stopping_rounds": config["early_stopping_rounds"],
+        "objective": config["objective"],
+        "boosting_type": config["boosting_type"],
+        "learning_rate": config["learning_rate"],
+        "tree_learner": config["tree_learner"],
+        "task": config["task"],
+        "num_thread": config["num_thread"],
+        "min_data_in_leaf": config["min_data_in_leaf"],
+        "two_round": config["two_round"],
+        "is_unbalance": config["is_unbalance"],
+        "num_leaves": config["num_leaves"],
+        "max_bin": config["max_bin"],
+    }

@@ -87,8 +87,7 @@ def transform_data_get_parts(data):
 
 def transform_data_get_cruises(data):
     # return list of numpy
-    features = []
-    labels = []
+    ret = []
     for cruise in data:
         _features = []
         _labels = []
@@ -108,27 +107,29 @@ def split_features_labels(dataset):
     )
 
 
-############################################
+######### Persist models and scores #########
 
 
-def get_model_path(base_dir, region):
+def get_model_path(base_dir, region, model_id):
     dir_path = os.path.join(base_dir, MODEL_DIR)
-    return os.path.join(dir_path, '{}_model.pkl'.format(region))
+    return os.path.join(dir_path, '{}_model_{}'.format(region, model_id))
 
 
-def get_prediction_path(base_dir, model_region, test_region):
-    dir_path = os.path.join(base_dir, SCORES_DIR)
-    return os.path.join(dir_path, 'model_{}_test_{}_scores.pkl'.format(model_region, test_region))
+def persist_predictions(base_dir, model_region, test_region, features, label, scores, model_id):
+    def get_prediction_path(base_dir, model_region, test_region, model_id):
+        dir_path = os.path.join(base_dir, SCORES_DIR)
+        return os.path.join(dir_path, 'model_{}_test_{}_scores_{}.pkl'.format(
+            model_region, test_region, model_id))
+
+    filepath = get_prediction_path(base_dir, model_region, test_region, model_id)
+    with open(filepath, 'wb') as fout:
+        pickle.dump((features[:, :4], label, scores), fout)
 
 
-def persist_predictions(base_dir, model_region, test_region, features, label, scores, weights):
-    with open(get_prediction_path(base_dir, model_region, test_region), 'wb') as fout:
-        pickle.dump((features[:, :4], label, scores, weights), fout)
-
-
-def persist_model(base_dir, region, gbm):
-    pkl_model_path = get_model_path(base_dir, region)
-    txt_model_path = pkl_model_path.rsplit('.', 1)[0] + ".txt"
+def persist_model(base_dir, region, gbm, model_id):
+    model_path = get_model_path(base_dir, region, model_id)
+    pkl_model_path = model_path + ".pkl"
+    txt_model_path = model_path + ".txt"
     with open(pkl_model_path, 'wb') as fout:
         pickle.dump(gbm, fout)
     gbm.save_model(txt_model_path)
