@@ -8,6 +8,7 @@ from time import time
 
 DATA_DIR = "/cryosat3/jalafate/bathymetry-data"
 INVENTORY_PATH = os.path.join(DATA_DIR, "inventory.tsv")
+CHUNK_SIZE = 100000
 
 MODEL_DIR = "runtime_models"
 SCORES_DIR = "runtime_scores"
@@ -22,9 +23,10 @@ def init_setup(base_dir):
             os.mkdir(dir_path)
 
 
-def train_test_split(array, rtrain, rvalidate, rtest):
+def train_test_split(array, rtrain, rvalidate, rtest, shuffle):
     assert(rtrain + rvalidate + rtest == 1.0)
-    random.shuffle(array)
+    if shuffle:
+        shuffle(array)
     r0, r1 = int(len(array) * rtrain), int(len(array) * rvalidate)
     r1 = r0 + r1
     trains, validates, tests = array[:r0], array[r0:r1], array[r1:]
@@ -38,10 +40,14 @@ def get_region_parts(region):
     inv = inv[inv["parts"] > 0]
     region_inv = inv[inv["region"] == region]
     partfiles = []
-    for basename, parts in region_inv[["cruise", "parts"]].values:
-        partfiles.append([
-            os.path.join(DATA_DIR, region, "{}_part{:06d}.pkl".format(basename, k)) for k in range(parts)
-        ])
+    for basename, parts, counts in region_inv[["cruise", "parts", "total"]].values:
+        cruise = [
+            [os.path.join(DATA_DIR, region, "{}_part{:06d}.pkl".format(basename, k)), CHUNK_SIZE]
+            for k in range(parts)
+        ]
+        if counts % CHUNK_SIZE > 0:
+            cruise[-1][1] = counts % CHUNK_SIZE
+        partfiles.append(cruise)
     return partfiles
 
 
@@ -54,58 +60,42 @@ def get_parts(all_regions):
 
 def remove_region_info_in_parts(all_parts):
     # return [["part1", "part2", ...], ["part1", "part2", ...]]
-    def merge_array(array):
-        ret = []
-        for t in array:
-            ret += t
-        return ret
     return merge_array(all_parts)
 
+
+def remove_cruise_info_in_parts(all_parts):
+    # return ["part11", "part12", ..., "part21", "part22", ...]
+    return merge_array(merge_array(all_parts))
+
+
+def merge_array(array):
+    ret = []
+    for t in array:
+        ret += t
+    return ret
 
 ######### Process loaded data #########
 
 
 def read_data(filepaths):
-    assert(type(filepaths) is list and type(filepaths[0]) is list and type(filepaths[0][0]) is str)
-    _ret = []
-    for cruise in filepaths:
-        ret = []
-        for parts in cruise:
-            with open(parts, "rb") as f:
-                features, labels = pickle.load(f)
-                ret.append((features, labels.astype(np.int)))
-        _ret.append(ret)
+    assert(type(filepaths) is list and len(filepaths[0]) == 2 and type(filepaths[0][0]) is str
+           and type(filepaths[0][1]) is int)
+    total = sum([count for _, count in filepaths])
+    with open(filepaths[0][0], "rb") as f:
+        _f, _ = pickle.load(f)
+    _ret = np.empty((total, _f.shape[1] + 1))
+    index = 0
+    for cruise_part, count in filepaths:
+        assert(index + count <= _ret.shape[0])
+        with open(cruise_part, "rb") as f:
+            features, labels = pickle.load(f)
+            try:
+                _ret[index:index + count] = np.concatenate(
+                    (labels.reshape(-1, 1), features), axis=1)
+            except:
+                print("Failed to read, {}, {}, {}, {}", cruise_part, count, index, features.shape)
+            index += count
     return _ret
-
-
-def transform_data_get_parts(data):
-    # return list of numpy
-    ret = []
-    for t in data:
-        ret += t
-    return ret
-
-
-def transform_data_get_cruises(data):
-    # return list of numpy
-    ret = []
-    for cruise in data:
-        _features = []
-        _labels = []
-        for a, b in cruise:
-            _features.append(a)
-            _labels.append(b)
-        ret.append(
-            (np.concatenate(_features, axis=0), np.concatenate(_labels, axis=0))
-        )
-    return ret
-
-
-def split_features_labels(dataset):
-    return (
-        np.concatenate([a for a, b in dataset]),
-        np.concatenate([b for a, b in dataset]),
-    )
 
 
 ######### Persist models and scores #########

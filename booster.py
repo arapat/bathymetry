@@ -24,7 +24,7 @@ def train(config, train_features, train_labels, valid_features, valid_labels, lo
         gbm = lgb.train(
             gbm_config,
             train_dataset,
-            num_boost_round=gbm_config["rounds"],
+            num_boost_round=config["rounds"],
             valid_sets=valid_sets,
             callbacks=[print_ts(logger)],
         )
@@ -32,6 +32,20 @@ def train(config, train_features, train_labels, valid_features, valid_labels, lo
         logger.log("training failed, {}".format(e))
         return None
     return gbm
+
+
+def cv(config, data, nfolds, shuffle, logger):
+    gbm_config = get_config(config)
+    logger.log("booster, cv, reshape dataset")
+    data = data.reshape((-1, data.shape[-1]))
+    features, labels = data[:, 1:], data[:, 1].astype(np.int)
+    logger.log("booster, cv, constrct dataset")
+    train_dataset = lgb.Dataset(features, label=labels, params={'max_bin': config["max_bin"]})
+    logger.log("booster, start cross validation")
+    cv_results = lgb.cv(gbm_config, train_dataset, num_boost_round=config["rounds"],
+                        nfold=nfolds, shuffle=shuffle, metrics=["binary_error", "binary", "auc"],
+                        eval_train_metric=False, verbose_eval=True)
+    return cv_results
 
 
 def test(model, region, test_region, features, labels, logger):
@@ -56,8 +70,6 @@ def test(model, region, test_region, features, labels, logger):
 
 def get_config(config):
     return {
-        "rounds": config["rounds"],
-        "early_stopping_rounds": config["early_stopping_rounds"],
         "objective": config["objective"],
         "boosting_type": config["boosting_type"],
         "learning_rate": config["learning_rate"],

@@ -1,7 +1,6 @@
 {
-    "work_dir": "/cryosat3/jalafate/worklog/cruise_all_regions",
-    "rounds": 1000,
-    "early_stopping_rounds": 200,
+    "work_dir": "/cryosat3/jalafate/worklog/cruise-kfold-notraineval",
+    "rounds": 100,
     "objective": "binary",
     "boosting_type": "gbdt",
     "learning_rate": 0.01,
