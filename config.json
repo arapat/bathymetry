@@ -1,5 +1,5 @@
 {
-    "work_dir": "/cryosat3/jalafate/worklog/cruise-kfold-manual",
+    "work_dir": "/cryosat3/jalafate/worklog/cruise-kfold-manual2",
     "rounds": 1000,
     "objective": "binary",
     "boosting_type": "gbdt",

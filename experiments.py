@@ -45,6 +45,7 @@ def run_cv(config):
         pickle.dump((parts, cv_results), f)
 
 
+# split by cruise
 def run_cv_custom(config):
     def make_k_folds(cruise_level, logger):
         fold_size = int(len(cruise_level) / 10)
@@ -58,6 +59,7 @@ def run_cv_custom(config):
             counts = sum([total for _, total, _ in seg])
             bads   = sum([bad for _, _, bad in seg])
             ret.append((num_measures, num_measures + counts, counts, bads))
+            num_measures += counts
         return (ret, total, total_bads)
 
     work_dir = config["work_dir"]
@@ -83,7 +85,7 @@ def run_cv_custom(config):
     train_dataset = get_lgb_dataset(data, config["max_bin"], logger)
 
     for i, (start_index, end_index, valid_counts, valid_bads) in enumerate(valid_seg):
-        logger.log("start training, {}".format(i))
+        logger.log("start training, {}, {}, {}".format(i, start_index, end_index))
         logger.log("stats, {}, {}, {}, {}".format(
             total_counts - valid_counts, total_bads - valid_bads, valid_counts, valid_bads))
         subset_index = list(range(start_index)) + list(range(end_index, total_counts))
