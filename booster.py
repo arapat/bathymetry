@@ -8,15 +8,16 @@ from .common import print_ts
 from .load_data import persist_model
 
 
-def train(config, train_features, train_labels, valid_features, valid_labels, logger):
+def train(config, training_data, validation_data, is_lgb_dataset, logger):
     gbm_config = get_config(config)
-    logger.log("booster, constrct dataset")
-    train_dataset = lgb.Dataset(train_features, label=train_labels,
-                                params={'max_bin': config["max_bin"]})
-    valid_sets = [train_dataset]
-    if valid_features is not None:
-        valid_dataset = lgb.Dataset(valid_features, label=valid_labels,
-                                    params={'max_bin': config["max_bin"]})
+    valid_sets = []
+    if is_lgb_dataset:
+        train_dataset = training_data
+    else:
+        train_dataset = get_lgb_dataset(training_data, config["max_bin"], logger)
+        valid_sets.append(train_dataset)
+    if validation_data is not None:
+        valid_dataset = get_lgb_dataset(validation_data, config["max_bin"], logger)
         valid_sets.append(valid_dataset)
 
     logger.log("booster, start training")
@@ -36,11 +37,7 @@ def train(config, train_features, train_labels, valid_features, valid_labels, lo
 
 def cv(config, data, nfolds, shuffle, logger):
     gbm_config = get_config(config)
-    logger.log("booster, cv, reshape dataset")
-    data = data.reshape((-1, data.shape[-1]))
-    features, labels = data[:, 1:], data[:, 1].astype(np.int)
-    logger.log("booster, cv, constrct dataset")
-    train_dataset = lgb.Dataset(features, label=labels, params={'max_bin': config["max_bin"]})
+    train_dataset = get_lgb_dataset(data, config["max_bin"], logger)
     logger.log("booster, start cross validation")
     cv_results = lgb.cv(gbm_config, train_dataset, num_boost_round=config["rounds"],
                         nfold=nfolds, shuffle=shuffle, metrics=["binary_error", "binary", "auc"],
@@ -48,24 +45,41 @@ def cv(config, data, nfolds, shuffle, logger):
     return cv_results
 
 
-def test(model, region, test_region, features, labels, logger):
+def test(model, region, test_region, test_data, logger):
     logger.log("booster, start predicting")
+    features, labels = _get_features_labels(test_data)
     preds = model.predict(features)
     scores = np.clip(preds, 1e-15, 1.0 - 1e-15)
     logger.log("booster, finish predicting")
 
     # compute auprc
     loss = np.mean(labels * -np.log(scores) + (1 - labels) * -np.log(1.0 - scores))
+    logger.log(scores) # debug
+    logger.log(labels) # debug
     precision, recall, _ = precision_recall_curve(labels, scores, pos_label=1)
     auprc = auc(recall, precision)
+    logger.log((recall, precision)) # debug
     fpr, tpr, _ = roc_curve(labels, scores, pos_label=1)
     auroc = auc(fpr, tpr)
+    logger.log((fpr, tpr)) # debug
     # accuracy
     acc = np.sum(labels == (scores > 0.5)) / labels.shape[0]
 
     logger.log("eval, {}, {}, {}, {}, {}, {}, {}".format(
         region, test_region, model.num_trees(), loss, auprc, auroc, acc))
     return scores
+
+
+def get_lgb_dataset(data, max_bin, logger):
+    logger.log("booster, cv, reshape dataset")
+    features, labels = _get_features_labels(data)
+    logger.log("booster, cv, constrct dataset")
+    return lgb.Dataset(features, label=labels, params={'max_bin': max_bin})
+
+
+def _get_features_labels(data):
+    data = data.reshape((-1, data.shape[-1]))
+    return data[:, 1:], data[:, 1].astype(np.int)
 
 
 def get_config(config):

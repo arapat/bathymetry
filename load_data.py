@@ -40,14 +40,14 @@ def get_region_parts(region):
     inv = inv[inv["parts"] > 0]
     region_inv = inv[inv["region"] == region]
     partfiles = []
-    for basename, parts, counts in region_inv[["cruise", "parts", "total"]].values:
+    for basename, parts, counts, bad in region_inv[["cruise", "parts", "total", "bad"]].values:
         cruise = [
             [os.path.join(DATA_DIR, region, "{}_part{:06d}.pkl".format(basename, k)), CHUNK_SIZE]
             for k in range(parts)
         ]
         if counts % CHUNK_SIZE > 0:
             cruise[-1][1] = counts % CHUNK_SIZE
-        partfiles.append(cruise)
+        partfiles.append((cruise, counts, bad))
     return partfiles
 
 
@@ -71,7 +71,10 @@ def remove_cruise_info_in_parts(all_parts):
 def merge_array(array):
     ret = []
     for t in array:
-        ret += t
+        if type(t) is tuple:
+            ret += t[0]
+        else:
+            ret += t
     return ret
 
 ######### Process loaded data #########
