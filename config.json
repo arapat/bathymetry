@@ -1,6 +1,6 @@
 {
     "work_dir": "/cryosat3/jalafate/worklog/cruise-kfold-manual",
-    "rounds": 100,
+    "rounds": 1000,
     "objective": "binary",
     "boosting_type": "gbdt",
     "learning_rate": 0.01,

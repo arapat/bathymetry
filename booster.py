@@ -54,14 +54,10 @@ def test(model, region, test_region, test_data, logger):
 
     # compute auprc
     loss = np.mean(labels * -np.log(scores) + (1 - labels) * -np.log(1.0 - scores))
-    logger.log(scores) # debug
-    logger.log(labels) # debug
     precision, recall, _ = precision_recall_curve(labels, scores, pos_label=1)
     auprc = auc(recall, precision)
-    logger.log((recall, precision)) # debug
     fpr, tpr, _ = roc_curve(labels, scores, pos_label=1)
     auroc = auc(fpr, tpr)
-    logger.log((fpr, tpr)) # debug
     # accuracy
     acc = np.sum(labels == (scores > 0.5)) / labels.shape[0]
 

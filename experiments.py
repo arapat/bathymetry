@@ -47,7 +47,7 @@ def run_cv(config):
 
 def run_cv_custom(config):
     def make_k_folds(cruise_level, logger):
-        fold_size = int(len(cruise_level) / 2)#10)
+        fold_size = int(len(cruise_level) / 10)
         logger.log("fold size, {}".format(fold_size))
         total        = sum([total for _, total, _ in cruise_level])
         total_bads   = sum([bad for _, _, bad in cruise_level])
