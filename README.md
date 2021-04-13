@@ -11,6 +11,7 @@ If the input format is tsv, it will be written to disk in pickle files so that n
 * `test.py`: template code to be called by "__main__.py" proper functions for testing. It outputs a pickle file that
 contains scores in addition to some meta information about examples, e.g. cruise ID, longitute, latitude
 * `train.py`: template code to be called by "__main__.py" proper functions for training.
+* `clean_CM.py`: for applying model predictions to CM files. 
 * `config.json`: config such as the input data path, and the directory to write the models
 
 ## Typical usage
@@ -49,7 +50,7 @@ Then specify these three files to the training program in `config.json`.
 
 2. Run training with bootstrap
 
-The bathymetry module is implemented to train the models in different conditions (see `task_type` below). Note that 
+The bathymetry module is implemented to train the models in different conditions (see `task_type` below). Note that
  bootstrap is NOT implemented in this module.
 
 ```
@@ -64,7 +65,7 @@ python bathymetry <data_type> <task_type> <config_path>
    * "test-all": test the model trained on all data on the dataset from research institutions (test n times)
    * "train-instances": training a model using a data that is splitted on the instance level (ignore for now)
    * "test-instances": testing a model using a test set that was splitted on the instance level (ignore for now)
-   
+
 3. Run testing
 
 Testing is implemented in this module (see above).
@@ -79,11 +80,18 @@ Testing is implemented in this module (see above).
 
 ### Label
 
-The label is derived from the column 04 (see below), `sigd`: the example is labeled 0 if sigd == “9999”, and labeled 1 otherwise.
+Each row in the TSV file correponds to one measurement. The descriptions of the columns could be found at
+[README.md](README.md).
+
+The learning task is binary classification, specifically, to decide if a depth measurement is correct or not.
+The label is 0 if it is wrong (or corrupted), and 1 if it is accurate.
+The human annotators put a label "9999" in the column 5, `sigd`, if they think the measurement is wrong,
+and put other values otherwise.
+The program we provide get the data label using a function in the form of `lambda row: row[4] != "9999"`.
 
 ### Description of all columns
 
-Each line in the `.tsv` data files should contain 35 columns. The meaning of the columns are as follows.
+Each line in the `.tsv` data files should contain 37 columns. The meaning of the columns are as follows.
 
 ```
 index name                                      Example              Description
@@ -91,7 +99,7 @@ index name                                      Example              Description
 01    lat                                	-43.99727            latitude of the location
 02    depth                              	-4637                the depth measured by the crew
 03    sigh                               	0                    not sure what it means
-04    sigd                               	-1                   state according to human editor: 9999 = bad (do not incorporate into atlas), all other values = Good (incorporate into atlas), 
+04    sigd                               	-1                   state according to human editor: 9999 = bad (do not incorporate into atlas), all other values = Good (incorporate into atlas),
 05    SID                                	10088                Cruise ID, should not be used as features
 06    pred                               	-4633                the predicted depth with the gravity model
 07    ID                                 	1                    not sure what it means
@@ -123,6 +131,7 @@ index name                                      Example              Description
 33    D-MED30m/STD30m                    	0.0102018
 34    year                               	2000                The year of the measurement
 35    kind                               	G                   Device type used for measurements
+36    PRED-ABS(VGG_5m)
 ```
 
 ## Program output
