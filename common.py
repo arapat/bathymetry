@@ -9,12 +9,6 @@ import numpy as np
 from time import time
 
 
-DATA_BASE_DIR = "/geosat2/julaiti/tsv_all"
-TRAINING_FILES_DESC = os.path.join(DATA_BASE_DIR, "training_files_desc.txt")
-VALIDATION_FILES_DESC = os.path.join(DATA_BASE_DIR, "validation_files_desc.txt")
-TESTING_FILES_DESC = os.path.join(DATA_BASE_DIR, "testing_files_desc.txt")
-
-
 class Logger:
     def __init__(self):
         self.file_handle = None

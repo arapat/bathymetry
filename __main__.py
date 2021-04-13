@@ -13,11 +13,13 @@ from .test import run_testing
 from .test import run_testing_specific_file
 
 
-regions = ['AGSO', 'JAMSTEC', 'JAMSTEC2', 'NGA', 'NGA2', 'NGDC', 'NOAA_geodas', 'SIO', 'US_multi']
+#regions = ['AGSO', 'JAMSTEC', 'JAMSTEC2', 'NGA', 'NGA2', 'NGDC', 'NOAA_geodas', 'SIO', 'US_multi']
+regions = ['NGDC','US_multi']
+#regions = ['TEST-ATL','TEST-PAC']
 param1 = ["tsv", "pickle"]
 param2 = ["train", "train-all", "test-self", "test-cross", "test-all",
-          "train-instances", "test-instances"]
-usage_msg = "Usage: ./lgb.py <{}> <{}> <config_path>".format("|".join(param1), "|".join(param2))
+          "train-instances", "test-instances", "test-usm2", "clean"]
+usage_msg = "Usage: python -m bathymetry <{}> <{}> <config_path>".format("|".join(param1), "|".join(param2))
 
 
 @ray.remote
@@ -98,7 +100,7 @@ if __name__ == '__main__':
     init_setup(config["base_dir"])
     task = sys.argv[2].lower()
 
-    ray.init(num_cpus=10)
+    ray.init(num_cpus=2)
     result_ids = []
     if task == "train":
         for region in regions:
@@ -121,6 +123,10 @@ if __name__ == '__main__':
     elif task == "test-self":
         for region in regions:
             result_ids.append(run_test.remote(region, [region], task))
+    elif task == "test-usm2":
+        for region in regions:
+            #result_ids.append(run_test(region, ['US_multi2'], "test-cross"))
+            result_ids.append(run_test.remote(region, ['US_multi2'], "test-cross"))
     else:
         assert(False)
     results = ray.get(result_ids)
