@@ -40,6 +40,7 @@ inst_weights = {
     'NOAA_geodas': 28041621.0,
     'SIO': 30369189.0,
     'US_multi': 35984658.0,
+    'PAC': 1.0,
 }
 
 
@@ -60,11 +61,14 @@ def read_data_from_text(filename, get_label=lambda cols: cols[4] != '9999'):
     with io.open(filename, 'r', newline='\n') as fread:
         for line in fread:
             cols = line.strip().split()
-            if len(cols) not in [NUM_COLS, NUM_COLS - 2]:
+            if len(cols) != 37 and len(cols) != 35:
                 incorrect_cols += 1
                 continue
-            if len(cols) == NUM_COLS - 2:
-                cols = ["X"] * 2
+            if len(cols) == 35:
+                # i think this is supposed to replace the data type and year fields
+                # which are actually the (0 indexed) 34th n 35th columns -- fixed
+                cols = cols[:-1] + ["nan", "nan"] + [cols[-1]]
+            #cols = cols[:-1] # not sure why the last one is removed.. commenting out
             cols[TYPE_INDEX] = data_type[cols[TYPE_INDEX]]
             labels.append(get_label(cols))
             features.append(np.array(
@@ -79,7 +83,7 @@ def read_data_from_text(filename, get_label=lambda cols: cols[4] != '9999'):
 def read_data_from_binary(filename):
     with open(filename, 'rb') as f:
         features, labels, weights = pickle.load(f)
-    return (features, labels, weights, 0)
+    return (features, labels, np.ones_like(labels), 0)
 
 
 def write_data_to_binary(base_dir, st, features, labels, weights, filename, prefix):
@@ -99,19 +103,25 @@ def get_datasets(region_str, base_dir, filepaths, is_read_text, prefix, logger):
     for filename in filepaths:
         filename = filename.strip()
         bin_filename = get_binary_filename(base_dir, prefix, filename)
-        if not is_read_text:
-            filename = bin_filename
+        # if not is_read_text:
+        #     filename = bin_filename
         try:
             if is_read_text:
                 features, labels, weights, incorrect_cols = read_data_from_text(filename)
             else:
-                features, labels, weights, incorrect_cols = read_data_from_binary(filename)
+                features, labels, weights, incorrect_cols = read_data_from_binary(bin_filename)
+            # Hugh: what does that mean, corrupt? Seems like the wrong label
+            # changed to len(labels) - sum
             logger.log("loaded, {}, incorrect cols, {}, corrupt, {}, size, {}, dim, {}".format(
-                filename, incorrect_cols, np.sum(labels), len(features), features[0].shape[0]))
+                filename, incorrect_cols, len(labels) - np.sum(labels), len(features), features[0].shape[0]))
         except Exception as err:
             # Print error message only if we are supposed to read this file
-            logger.log("Failed to load {}, is_read_text, {}, Error, {}".format(
-                filename, is_read_text, err))
+            if is_read_text:
+                logger.log("Failed to load {}, is_read_text, {}, Error, {}".format(
+                    filename, is_read_text, err))
+            else:
+                logger.log("Failed to load {}, is_read_text, {}, Error, {}".format(
+                    bin_filename, is_read_text, err))
             continue
 
         region_name = None
@@ -120,8 +130,12 @@ def get_datasets(region_str, base_dir, filepaths, is_read_text, prefix, logger):
                 region_name = t
                 break
         weights = np.ones_like(weights) / inst_weights[region_name]
-        data_features  += features
-        data_labels    += labels
+        if type(features) is list:
+            data_features  += features
+            data_labels    += labels
+        else:
+            data_features  += features.tolist()
+            data_labels    += labels.tolist()
         data_weights   += weights.tolist()
         source_filename += [filename] * len(features)
 
@@ -140,11 +154,11 @@ def get_datasets(region_str, base_dir, filepaths, is_read_text, prefix, logger):
     with open("sources-{}.txt".format(region_str), "w") as f:
         f.write("\n".join(source_filename))
     # Remove unwanted features when reading from the binary form
-    if not is_read_text:
-        mask = np.ones(shape=data_features.shape[1]).astype(bool)
-        for i in REMOVED_FEATURES_FROM_BIN:
-            mask[i] = False
-        data_features = data_features[:, mask]
+    # if not is_read_text:
+    #     mask = np.ones(shape=data_features.shape[1]).astype(bool)
+    #     for i in REMOVED_FEATURES_FROM_BIN:
+    #         mask[i] = False
+    #     data_features = data_features[:, mask]
     logger.log("Dataset is loaded, size {}".format(data_features.shape))
     return (data_features, data_labels, data_weights)
 
@@ -180,10 +194,17 @@ def get_prediction_path(base_dir, model_region, test_region):
     dir_path = os.path.join(base_dir, SCORES_DIR)
     return os.path.join(dir_path, 'model_{}_test_{}_scores.pkl'.format(model_region, test_region))
 
+def load_predictions(prediction_file,logger):
+    with open(prediction_file, "rb") as f:
+      (features, label, scores, weights) = pickle.load(f)
+    return features, label, scores, weights
 
 def persist_predictions(base_dir, model_region, test_region, features, label, scores, weights):
     with open(get_prediction_path(base_dir, model_region, test_region), 'wb') as fout:
         pickle.dump((features[:, :4], label, scores, weights), fout)
+    with open(get_prediction_path(base_dir, model_region, test_region) + ".txt", 'w') as fout:
+        for i in range(len(scores)):
+            fout.write("{}\n".format("\t".join([str(t) for t in features[i][:4]] + ["1", str(scores[i])])))
 
 
 def persist_model(base_dir, region, gbm):
