@@ -4,8 +4,8 @@ import pickle
 import json
 
 import numpy as np
-from .load_data import get_prediction_path, load_predictions, init_setup
-from .common import Logger
+from load_data import get_prediction_path, load_predictions, init_setup
+from common import Logger
 
 usage_msg = "Usage: python clean_CM.py <MODEL> <TESTED> <config_path>"
 
