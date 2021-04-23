@@ -9,7 +9,10 @@ from common import Logger
 
 usage_msg = "Usage: python clean_CM.py <MODEL> <TESTED> <config_path>"
 
-def clean_one_cm(cm_filename, scores, logger, threshold=0.6):
+def edit_one_cm(cm_filename, scores, logger):
+    """
+    Append model scores to CM, reformat for Py-CMeditor
+    """
     logger.log("Cleaning CM file, {}".format(cm_filename))
     cm_edit_filename = cm_filename + '.edit.' + model_source
     logger.log("Writing new file, {}".format(cm_edit_filename))
@@ -18,8 +21,9 @@ def clean_one_cm(cm_filename, scores, logger, threshold=0.6):
     with open(cm_filename, 'r', newline='\n') as fread:
         for line in fread:
             fields = line.strip().split()
-            if scores[0] < threshold:
-                fields[5] = '9999'
+            fields = fields[0:6]
+            fields.append(scores[0])
+
             scores = scores[1:]
             fwrite.write("{}\n".format(" ".join(fields)))
 
