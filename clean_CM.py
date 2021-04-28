@@ -13,6 +13,7 @@ usage_msg = "Usage: python clean_CM.py <MODEL> <TESTED> <config_path>"
 def edit_one_cm(tsv_filename, scores, logger):
     """
     Append model scores to CM, reformat for Py-CMeditor
+    Format: ID, Lon, Lat, Depth, SIG H, SIG D, SID, pred, score
     """
     logger.log("Cleaning CM file, {}".format(tsv_filename))
     cm_dir = os.path.dirname(tsv_filename).replace("tsv_all","cm_data/public")
@@ -26,7 +27,7 @@ def edit_one_cm(tsv_filename, scores, logger):
         count = 1
         for line in fread:
             fields = line.strip().split()
-            fields = fields[0:6]
+            fields = fields[0:7]
             fields.append(str(scores[0]))
             fields.insert(0,str(count))
 
