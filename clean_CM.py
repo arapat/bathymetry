@@ -74,4 +74,5 @@ if __name__ == '__main__':
         filelist = f.readlines()
 
     for file in filelist:
-        scores = edit_one_cm(file.strip(), scores, logger)
+        if test_source in os.path.dirname(file.strip()):
+            scores = edit_one_cm(file.strip(), scores, logger)
