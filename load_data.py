@@ -77,7 +77,7 @@ def read_data_from_text(filename, get_label=lambda cols: cols[4] != '9999'):
     assert(len(features) == len(labels))
     # weights = np.ones_like(labels) * max(MAX_WEIGHT, 1.0 / max(1.0, len(labels)))
     weights = np.ones_like(labels)
-    return (features, labels, weights.tolist(), incorrect_cols)
+    return (features, labels, weights, incorrect_cols)
 
 
 def read_data_from_binary(filename):
