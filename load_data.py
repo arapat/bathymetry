@@ -9,7 +9,7 @@ DEBUG = False
 
 NUM_COLS = 36
 TYPE_INDEX = 35
-REMOVED_FEATURES = [3, 4, 5, 7]
+REMOVED_FEATURES = [3, 4, 5, 7, 34, 35]
 REMOVED_FEATURES_FROM_BIN = []
 
 MAX_NUM_EXAMPLES_PER_PICKLE = 1000000
@@ -129,7 +129,7 @@ def get_datasets(region_str, base_dir, filepaths, is_read_text, prefix, logger):
             if t in filename:
                 region_name = t
                 break
-        weights = np.ones_like(weights) / inst_weights[region_name]
+        #weights = np.ones_like(weights) / inst_weights[region_name]
         if type(features) is list:
             data_features  += features
             data_labels    += labels
