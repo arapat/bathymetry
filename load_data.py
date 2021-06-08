@@ -155,7 +155,6 @@ def get_datasets(region_str, base_dir, filepaths, is_read_text, prefix, logger):
         f.write("\n".join(source_filename))
     # Remove unwanted features when reading from the binary form
     # if not is_read_text:
-    logger.log("data_features shape= {}".format(data_features.shape))
     mask = np.ones(shape=data_features.shape[1]).astype(bool)
     for i in REMOVED_FEATURES_FROM_BIN:
         mask[i] = False
