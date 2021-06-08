@@ -10,7 +10,6 @@ DEBUG = False
 NUM_COLS = 36
 TYPE_INDEX = 35
 REMOVED_FEATURES = [0, 1, 3, 4, 5, 7, 34]
-REMOVED_FEATURES_FROM_BIN = []
 
 MAX_NUM_EXAMPLES_PER_PICKLE = 1000000
 if DEBUG:
@@ -156,7 +155,7 @@ def get_datasets(region_str, base_dir, filepaths, is_read_text, prefix, logger):
     # Remove unwanted features when reading from the binary form
     # if not is_read_text:
     mask = np.ones(shape=data_features.shape[1]).astype(bool)
-    for i in REMOVED_FEATURES_FROM_BIN:
+    for i in REMOVED_FEATURES:
         mask[i] = False
     data_features = data_features[:, mask]
     logger.log("Dataset is loaded, size {}".format(data_features.shape))
