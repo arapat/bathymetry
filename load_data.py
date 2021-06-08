@@ -10,7 +10,7 @@ DEBUG = False
 NUM_COLS = 36
 TYPE_INDEX = 35
 REMOVED_FEATURES = [0, 1, 3, 4, 5, 7, 34]
-#REMOVED_FEATURES_FROM_BIN = REMOVED_FEATURES
+REMOVED_FEATURES_FROM_BIN = []
 
 MAX_NUM_EXAMPLES_PER_PICKLE = 1000000
 if DEBUG:
@@ -155,11 +155,11 @@ def get_datasets(region_str, base_dir, filepaths, is_read_text, prefix, logger):
         f.write("\n".join(source_filename))
     # Remove unwanted features when reading from the binary form
     # if not is_read_text:
+    logger.log("data_features shape= {}".format(data_features.shape))
     mask = np.ones(shape=data_features.shape[1]).astype(bool)
-    for i in REMOVED_FEATURES:
+    for i in REMOVED_FEATURES_FROM_BIN:
         mask[i] = False
-        data_features = data_features[:, mask]
-
+    data_features = data_features[:, mask]
     logger.log("Dataset is loaded, size {}".format(data_features.shape))
     return (data_features, data_labels, data_weights)
 
@@ -183,7 +183,10 @@ def get_region_data(base_dir, files, regions, is_read_text, prefix, logger):
     region_files = []
     for t in regions:
         region_files += get_files(t)
-    return get_datasets(regions[0], base_dir, region_files, is_read_text, prefix, logger)
+    if not region_files:
+        return [],[],[]
+    else:
+        return get_datasets(regions[0], base_dir, region_files, is_read_text, prefix, logger)
 
 
 def get_model_path(base_dir, region):
