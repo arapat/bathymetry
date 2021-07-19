@@ -13,8 +13,9 @@ from .test import run_testing
 from .test import run_testing_specific_file
 
 
-#regions = ['AGSO', 'JAMSTEC', 'JAMSTEC2', 'NGA', 'NGA2', 'NGDC', 'NOAA_geodas', 'SIO', 'US_multi']
-regions = ['NGDC','US_multi','US_multi2']
+regions = ['AGSO', 'JAMSTEC', 'JAMSTEC2', 'NGA', 'NGA2', 'NGDC', 'NOAA_geodas',
+        'SIO', 'US_multi', 'US_multi2']
+#regions = ['NGDC','US_multi','US_multi2']
 #regions = ['TEST-ATL','TEST-PAC']
 param1 = ["tsv", "pickle"]
 param2 = ["train", "train-all", "test-self", "test-cross", "test-all",
