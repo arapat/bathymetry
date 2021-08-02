@@ -63,10 +63,10 @@ def get_models(base_path):
 def plot_ftr_importance(models,features):
     all_feature_imp = []
     fig, ax = plt.subplots(len(models), 1, figsize=(10, 6 * len(models)))
-
-    for ax, model_path in zip(ax, models):
-        model_name = os.path.basename(model_path).split(".")[0]
-        with open(model_path, 'rb') as f:
+    
+    if len(models) == 1:
+        model_name = os.path.basename(models[0]).split(".")[0]
+        with open(models[0], 'rb') as f:
             model = pkl.load(f)
         imp = sorted(zip(model.feature_importance(importance_type='gain'),features))
         feature_imp = pd.DataFrame(imp, columns=['Value','Feature']) \
@@ -76,6 +76,20 @@ def plot_ftr_importance(models,features):
 
         sns.barplot(x="Value", y="Feature", data=feature_imp, ax=ax)
         ax.set_title('{} LightGBM Features'.format(model_name))
+        
+    else:
+        for ax, model_path in zip(ax, models):
+            model_name = os.path.basename(model_path).split(".")[0]
+            with open(model_path, 'rb') as f:
+                model = pkl.load(f)
+            imp = sorted(zip(model.feature_importance(importance_type='gain'),features))
+            feature_imp = pd.DataFrame(imp, columns=['Value','Feature']) \
+                            .sort_values(by="Value", ascending=False)
+            feature_imp["agency"] = model_name.rsplit('_', 1)[0]
+            all_feature_imp.append(feature_imp)
+
+            sns.barplot(x="Value", y="Feature", data=feature_imp, ax=ax)
+            ax.set_title('{} LightGBM Features'.format(model_name))
 
     fig.tight_layout()
     return
@@ -128,9 +142,12 @@ def plot_roc(ax,fpr,tpr,source,auroc):
     ax.set_ylabel('True positive rate')
     return
 
-def plot_PRCROC(sources,base_dir):
-    scores_filename = "model_{}_test_{}_scores.pkl"
-    fig, ax_list = plt.subplots(1, 2, figsize=(20,8))
+def plot_PRCROC(sources,base_dir,all_model=False):
+    if all_model==True:
+        scores_filename = "model_all_test_{}_scores.pkl"
+    else:
+        scores_filename = "model_{}_test_{}_scores.pkl"
+    fig, ax_list = plt.subplots(1, len(sources), figsize=(20,8), sharey=True)
     for i, source in enumerate(sources):
         score_file = base_dir + scores_filename.format(source,source)
         with open(score_file,"rb") as f:
@@ -140,7 +157,7 @@ def plot_PRCROC(sources,base_dir):
         axis = ax_list[i]
         plot_prc(axis,precision,recall,thresh,source,auprc)
 
-    fig, ax_list = plt.subplots(1, 2, figsize=(20,8))
+    fig, ax_list = plt.subplots(1, len(sources), figsize=(20,8),sharey=True)
     for i, source in enumerate(sources):
         score_file = base_dir + scores_filename.format(source,source)
         with open(score_file,"rb") as f:
@@ -152,29 +169,17 @@ def plot_PRCROC(sources,base_dir):
     return
 
 def get_margin_plot(scores0, weights0, scores1, weights1, labels, ax, legends=None, title=None, colors=['b', 'r']):
-    y0 = np.cumsum(weights0) / np.sum(weights0)
-    ax[0].plot(scores0, 1.0 - y0, colors[0], label=labels[0])
-    ax[0].fill_between(scores0, 1.0 - y0, alpha=0.2, color=colors[0])
-    y1 = np.cumsum(weights1) / np.sum(weights1)
-    ax[0].plot(scores1, y1, colors[1], label=labels[1])
-    ax[0].fill_between(scores1, y1, alpha=0.2, color=colors[1])
-    ax[0].legend(loc=9)
-    ax[0].set_xlabel('Margin Score')
-    ax[0].set_ylabel('Weights %')
-    if title:
-        ax[0].set_title(title)
-
     y0 = np.cumsum(np.ones_like(weights0)) / weights0.shape[0]
-    ax[1].plot(scores0, 1.0 - y0, colors[0], label=labels[0])
-    ax[1].fill_between(scores0, 1.0 - y0, alpha=0.2, color=colors[0])
+    ax.plot(scores0, 1.0 - y0, colors[0], label=labels[0])
+    ax.fill_between(scores0, 1.0 - y0, alpha=0.2, color=colors[0])
     y1 = np.cumsum(np.ones_like(weights1)) / weights1.shape[0]
-    ax[1].plot(scores1, y1, colors[1], label=labels[1])
-    ax[1].fill_between(scores1, y1, alpha=0.2, color=colors[1])
-    ax[1].legend(loc=9)
-    ax[1].set_xlabel('Margin Score')
-    ax[1].set_ylabel('# Measures %')
+    ax.plot(scores1, y1, colors[1], label=labels[1])
+    ax.fill_between(scores1, y1, alpha=0.2, color=colors[1])
+    ax.legend(loc=9)
+    ax.set_xlabel('Margin Score')
+    ax.set_ylabel('# Measures %')
     if title:
-        ax[1].set_title(title)
+        ax.set_title(title)
     return
 
 def plot_scores(data, source):    
@@ -189,15 +194,24 @@ def plot_scores(data, source):
     order1 = np.argsort(scores1)
     scores1, weights1 = scores1[order1], weights1[order1]
 
-    fig, ax = plt.subplots(1, 2, figsize=(20, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
     # for i in range(10):
     get_margin_plot(scores0, weights0, scores1, weights1,
                     ["bad", "good"], ax)
 
-    for i in range(len(ax)):
-        ax[i].grid(which='major', linestyle='-', linewidth='0.5', color='gray')
-        ax[i].grid(which='minor', linestyle=':', linewidth='0.5', color='gray')
+    ax.grid(which='major', linestyle='-', linewidth='0.5', color='gray')
+    ax.grid(which='minor', linestyle=':', linewidth='0.5', color='gray')
 
-    ax[0].set_title('%s aggr. by weights\ndata_size=%d' % (source, labels.shape[0]))
-    ax[1].set_title('%s aggr. by counts\ndata_size=%d' % (source, labels.shape[0]))
+    ax.set_title('%s aggr. by counts\ndata_size=%d' % (source, labels.shape[0]))
+    return
+
+def plt_score_distribution(sources,all_model=False):
+    for source in sources:
+        if all_model==True:
+            path = os.path.join(base_dir, "model_all_test_{}_scores.pkl".format(source))
+        else:
+            path = os.path.join(base_dir, "model_{}_test_{}_scores.pkl".format(source,source))
+        with open(path, 'rb') as f:
+            data = pickle.load(f)
+        plot_scores(data, source)
     return
