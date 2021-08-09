@@ -173,7 +173,8 @@ def get_binary_filename(base_dir, prefix, filename):
         prefix = prefix[:-1]
     basename = os.path.basename(filename)
     dirname = os.path.basename(os.path.dirname(filename))
-    filename = prefix + '_' + dirname + '_' + basename + ".pkl"
+    #filename = prefix + '_' + dirname + '_' + basename + ".pkl"
+    filename = dirname + '_' + basename + ".pkl"
     return os.path.join(base_dir, os.path.join(BINARY_DIR, filename))
 
 
