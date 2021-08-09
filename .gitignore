@@ -64,6 +64,3 @@ target/
 
 # Editor
 .vscode
-
-# other
-analysis/show-cruise-path.ipynb
