@@ -7,7 +7,7 @@ from sklearn.metrics import roc_curve
 from .common import print_ts
 from .load_data import persist_model
 
-def train(config, train_dataset, valid_dataset, region, logger):
+def train(config, train_dataset, valid_dataset, region, logger, n=-1):
     logger.log("start training...")
     # Strange bug exists that prevents saving all iterations if `early_stopping_rounds` is enabled
     config["early_stopping_rounds"] = None
@@ -28,7 +28,10 @@ def train(config, train_dataset, valid_dataset, region, logger):
         logger.log("Failed to train, {}, {}".format(region, e))
         return
     logger.log("training completed.")
-    persist_model(config["base_dir"], region, gbm)
+    if n >= 0:
+        persist_model(config["base_dir"], region + str(n), gbm)
+    else:
+        persist_model(config["base_dir"], region, gbm)
     logger.log("Model for {} is persisted".format(region))
 
 

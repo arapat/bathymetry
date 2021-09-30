@@ -116,7 +116,7 @@ def get_datasets(region_str, base_dir, filepaths, is_read_text, prefix, logger):
             # Hugh: what does that mean, corrupt? Seems like the wrong label
             # changed to len(labels) - sum
             logger.log("loaded, {}, incorrect cols, {}, corrupt, {}, size, {}, dim, {}".format(
-                filename, incorrect_cols, len(labels) - np.sum(labels), len(features), features[0].shape[0]))
+                bin_filename, incorrect_cols, len(labels) - np.sum(labels), len(features), features[0].shape[0]))
         except Exception as err:
             # Print error message only if we are supposed to read this file
             if is_read_text:
