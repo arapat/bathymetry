@@ -48,6 +48,27 @@ def run_training_all(config, regions, is_read_text, logger):
     run_training_per_region(
         config, regions, "all", all_training_files, all_valid_files, is_read_text, logger)
 
+def run_training_n_times(config, regions, is_read_text, logger, is_random=True):
+    with open(config["training_files"]) as f:
+        all_training_files = f.readlines()
+    with open(config["validation_files"]) as f:
+        all_valid_files = f.readlines()
+    logger.log("start constructing datasets")
+    (t_features, t_labels, t_weights) = get_region_data(
+        config["base_dir"], all_training_files, regions, is_read_text, TRAIN_PREFIX, logger)
+    train_dataset = lgb.Dataset(
+        t_features, label=t_labels, weight=t_weights, params={'max_bin': config["max_bin"]})
+    (v_features, v_labels, v_weights) = get_region_data(
+        config["base_dir"], all_valid_files, regions, is_read_text, VALID_PREFIX, logger)
+    if len(v_features) == 0:
+        logger.log("No validation data provided.")
+        valid_dataset = None
+    else:
+        valid_dataset = lgb.Dataset(
+            v_features, label=v_labels, weight=v_weights, params={'max_bin': config["max_bin"]})
+    for n in range(10):
+        train(config, train_dataset, valid_dataset, region_str, logger, n)
+
 
 # Specify a data file
 def run_training_specific_file(filenames, region_name, config, logger):
