@@ -180,7 +180,7 @@ def get_binary_filename(base_dir, prefix, filename):
 def get_region_data(base_dir, files, regions, is_read_text, prefix, logger):
     def get_files(region):
         return [filepath for filepath in files
-                if "/{}/".format(region) in filepath]
+                if "/{}_".format(region) in filepath]
     assert(type(regions) is list)
     region_files = []
     for t in regions:
